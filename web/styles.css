@@ -41,6 +41,20 @@ button, input, select { font: inherit; }
 button, select, input[type="date"] { color: inherit; }
 button { cursor: pointer; }
 
+.skip-link {
+  position: absolute;
+  z-index: 10;
+  top: 8px;
+  left: 8px;
+  padding: 10px 14px;
+  transform: translateY(-160%);
+  border-radius: 6px;
+  background: var(--blue-dark);
+  color: #fff;
+  font-weight: 650;
+}
+.skip-link:focus { transform: translateY(0); }
+
 :focus-visible {
   outline: 3px solid #bd7c18;
   outline-offset: 3px;
@@ -243,6 +257,7 @@ h2 { margin-bottom: 0; color: var(--ink-strong); font-size: 17px; font-weight: 6
   .page-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin: 5px 0 18px; }
   .freshness { white-space: normal; }
   .filter-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 13px; }
+  .filter-field select, .filter-field input { font-size: 16px; }
   .property-field { grid-column: 1 / -1; }
   .button { width: 100%; }
   .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }

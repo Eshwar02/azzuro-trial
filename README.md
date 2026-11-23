@@ -5,6 +5,7 @@ The collector is designed for Booking.com's authorized Guest Review API and writ
 ## Requirements
 
 - Python 3.10 or newer.
+- On Windows, install the included `tzdata` dependency; Windows does not ship an IANA timezone database for Python's `zoneinfo` by default.
 - A Booking.com Connectivity machine account using token-based authentication.
 - `review-api` access for all four properties, with the Guest reviews connection enabled.
 - The Booking.com hotel ID for each property.
@@ -15,7 +16,10 @@ The API is for internal property use. Azzuro must confirm that its account and i
 
 ```sh
 cp .env.example .env
+python3 -m pip install -r requirements.txt
 ```
+
+In PowerShell, use `Copy-Item .env.example .env` and `python -m pip install -r requirements.txt`.
 
 Edit `.env` with the machine account's client ID and secret and the four hotel IDs. Keep `.env` private; it is ignored by Git. Do not put credentials in command arguments, screenshots, logs, or source files.
 
@@ -29,9 +33,11 @@ From the repository root:
 PYTHONPATH=src python3 -m azzuro_reviews sync --from-date 2024-01-01
 ```
 
+In PowerShell, use `$env:PYTHONPATH = "src"` and then run `python -m azzuro_reviews sync --from-date 2024-01-01`.
+
 `--from-date` is inclusive. Choose a start date Azzuro is authorized to retain. The first run reads pages from that date until Booking.com returns an empty page. Later runs resume from the saved empty-page cursor, following new pages until the next empty page. Reviews are upserted by `(property_id, review_id)`, so repeats and edited reviews do not create duplicates. Changing `--from-date` starts a fresh backfill. The collector processes properties one at a time and exits non-zero if any property fails.
 
-By default, records go to `data/reviews.sqlite3`. Set `AZZURO_DB_PATH` in `.env` to use another path. No third-party Python packages are required.
+By default, records go to `data/reviews.sqlite3`. Set `AZZURO_DB_PATH` in `.env` to use another path. The collector and dashboard otherwise use the Python standard library.
 
 ## Stored data
 
@@ -56,6 +62,17 @@ python3 server.py
 Then open `http://127.0.0.1:8000`. The server binds to the local machine by default. It reads from the configured SQLite database when one exists; until then, it uses the clearly marked synthetic demo file. It serves only the dashboard assets and the normalized dashboard response, not repository files or `.env`.
 
 The source timestamp is retained as returned. The API documentation's example does not specify a timezone for its timestamp string, so `review_date` currently uses its date portion. Confirm timestamp semantics before using hour-level reporting or converting dates across timezones.
+
+## Checks
+
+Run the collector, storage, and dashboard integration checks with:
+
+```sh
+python3 -m unittest discover -s tests -v
+node --check web/app.js
+```
+
+To check concurrent dashboard API requests, start the server in one terminal, then run `python3 scripts/load_check.py --requests 200 --workers 32` in another. On Windows, use `python` instead of `python3` where needed. GitHub Actions also checks Python 3.10, 3.12, and 3.14 on Linux, Windows, and macOS.
 
 ## Reliability and known limits
 

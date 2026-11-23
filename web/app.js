@@ -250,8 +250,9 @@ function updateFeed(reviews) {
     feed.append(card);
   });
   const loadMore = document.querySelector("#load-more");
-  loadMore.hidden = ordered.length <= state.feedLimit;
-  loadMore.textContent = `Show more reviews (${ordered.length - state.feedLimit} remaining)`;
+  const remaining = Math.max(0, ordered.length - state.feedLimit);
+  loadMore.hidden = remaining === 0;
+  loadMore.textContent = `Show more reviews (${remaining} remaining)`;
 }
 
 function updateFreshness(payload) {
