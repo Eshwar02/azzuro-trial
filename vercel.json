@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "echo static dashboard ready",
+  "installCommand": "true",
+  "outputDirectory": "web",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://azzuro-trial-review-api.onrender.com/api/:path*"
+    }
+  ]
+}

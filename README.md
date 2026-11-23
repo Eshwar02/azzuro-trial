@@ -63,6 +63,17 @@ Then open `http://127.0.0.1:8000`. The server binds to the local machine by defa
 
 The source timestamp is retained as returned. The API documentation's example does not specify a timezone for its timestamp string, so `review_date` currently uses its date portion. Confirm timestamp semantics before using hour-level reporting or converting dates across timezones.
 
+## Deploy frontend and backend
+
+The included deployment files split the app across Vercel and Render: Vercel serves the static files from `web/`, and its `/api/*` rewrite proxies to the Render Python service defined in `render.yaml`. Create a Render Blueprint from this repository's `main` branch, then create a Vercel project from the same repository with the repository root as its project root. The Vercel configuration sets the static output directory and API rewrite.
+
+The Render service name is `azzuro-trial-review-api`, which is also the upstream hostname in `vercel.json`. If Render assigns a different URL, update that rewrite destination before deploying the Vercel project. Check `/api/dashboard` on Render and the dashboard page on Vercel after both deployments finish.
+
+Both services are configured for free-tier trial use. A free Render web service can sleep after inactivity and has an ephemeral filesystem; this demo therefore falls back to its labeled fictional sample data unless an authorized review database is present. Live Booking.com collection still requires approved API credentials and the four property IDs.
+
+- [Render Blueprint setup](https://render.com/docs/infrastructure-as-code)
+- [Vercel external rewrites](https://vercel.com/docs/routing/rewrites)
+
 ## Checks
 
 Run the collector, storage, and dashboard integration checks with:
