@@ -31,7 +31,7 @@ Do not request or store a personal Extranet password. Use a machine account and 
 
 The documented endpoint retrieves reviews by property ID. Current machine accounts use token-based authentication: exchange the client ID and secret for a short-lived JWT, then call the review endpoint with a bearer token over HTTPS. The response includes a review ID, creation and last-change timestamps, language, positive and negative text where provided, overall and category scores where provided, and metadata. Some fields are optional. The response can also include reviewer details; the dashboard does not need reviewer names, so discard those fields at ingestion.
 
-The API returns ten reviews by default and provides a `next_page` cursor for pagination. The initial sync should follow pages from the approved start date until the API returns an empty page. Upsert by `(property_id, review_id)` and store the source timestamps and the time the collector received each record. Do not treat a failed or partial run as a completed sync.
+The API returns ten reviews by default and provides a `next_page` cursor for pagination. The initial sync should follow pages from the approved start date until the API returns an empty page. Booking.com says to keep polling that last empty-page cursor to retrieve the latest modified set. Persist the cursor per property and start date; advance it only after a complete successful run. Upsert by `(property_id, review_id)` and store source timestamps, a validated source URL when present, and the time the collector received each record. Do not treat a failed or partial run as a completed sync.
 
 For each property/run, record start time, finish time, outcome, records seen, added, updated, unchanged, and a safe error code. Retry temporary network, server, and rate-limit failures with bounded backoff. Treat authentication or permission failures as configuration errors requiring attention. Never turn a failed request into an empty review result.
 
@@ -62,11 +62,12 @@ The Booking.com documentation supports the API, connection, and iframe distincti
 - Direct inspection of all four supplied listing URLs returned a JavaScript-disabled robot-verification page in the research browser. This describes this inspection environment; it does not establish whether a normal visitor can view the pages.
 - Booking.com's terms page, section A15.2, says automated access, monitoring, copying, scraping, or downloading requires prior express written permission.
 - Booking.com documents a Guest Review API for internal property use, with a permissioned machine account and property connection. It is usable only after Azzuro confirms access and completes applicable onboarding/self-assessment requirements.
+- The self-assessment tutorial is for existing Connectivity Partners. Its test property has no reviews preloaded: the partner must create a test reservation and submit a test review before exercising retrieval. It is a way to validate an authorized integration, not a source of the four hotels' live reviews.
 - No review data was collected in this phase. We have not received Azzuro's property IDs, API permission, credentials, or an authorized export.
 
 ## Collector implementation
 
-The repository now has a Python command-line collector in `src/azzuro_reviews/`. It exchanges the machine account credentials for a JWT, caches the token while syncing properties, retries transient failures, follows API pagination links on Booking.com's API host, and upserts reviews and run status into SQLite. It discards reviewer metadata and reservation IDs. Each run re-reads pages from its configured start date; this is deliberately simple and idempotent, though it will make more requests as history grows.
+The repository now has a Python command-line collector in `src/azzuro_reviews/`. It exchanges the machine account credentials for a JWT, caches the token while syncing properties, retries transient failures, follows API pagination links on Booking.com's API host, and upserts reviews and run status into SQLite. It discards reviewer metadata and reservation IDs, and retains a validated source URL when supplied. It follows the API's empty-page cursor between runs; changing the configured start date triggers a fresh backfill.
 
 Run instructions and the environment variable format are in the root [README](../README.md). The collector has not been run against Booking.com because API access and hotel IDs are still unconfirmed. No live review data is included.
 

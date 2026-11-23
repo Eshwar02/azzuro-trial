@@ -29,13 +29,13 @@ From the repository root:
 PYTHONPATH=src python3 -m azzuro_reviews sync --from-date 2024-01-01
 ```
 
-`--from-date` is inclusive. Choose a start date Azzuro is authorized to retain. Each run reads all available pages from that date and upserts by `(property_id, review_id)`. Re-running the same date is safe against duplicates and also picks up changed reviews. The collector processes the four properties one at a time and exits non-zero if any property fails.
+`--from-date` is inclusive. Choose a start date Azzuro is authorized to retain. The first run reads pages from that date until Booking.com returns an empty page. Later runs resume from the saved empty-page cursor, following new pages until the next empty page. Reviews are upserted by `(property_id, review_id)`, so repeats and edited reviews do not create duplicates. Changing `--from-date` starts a fresh backfill. The collector processes properties one at a time and exits non-zero if any property fails.
 
 By default, records go to `data/reviews.sqlite3`. Set `AZZURO_DB_PATH` in `.env` to use another path. No third-party Python packages are required.
 
 ## Stored data
 
-The `reviews` table stores property identifiers, review IDs, source timestamps, date, language, headline, positive and negative text, overall score, available category scores, and collection time. Reviewer details are discarded during ingestion. Responses and reservation IDs are not stored.
+The `reviews` table stores property identifiers, review IDs, source timestamps, date, language, headline, positive and negative text, overall score, available category scores, a validated Booking.com source URL when supplied, and collection time. Reviewer details, replies, and reservation IDs are discarded during ingestion. Some reviews contain a score but no text; those records remain available for rating summaries and are labelled as having no written comment.
 
 The `collection_runs` table records each property's run status, counts, start and finish times, and a non-sensitive error code. A failed API call is recorded as a failure, not as a successful empty result. Some records may have been saved before a later page failed; the run record makes that partial outcome visible, and a later sync safely revisits the same reviews.
 
@@ -62,7 +62,7 @@ The source timestamp is retained as returned. The API documentation's example do
 - The collector uses Booking.com's documented token exchange endpoint. Tokens expire after one hour; an expired token gets one refresh and retry.
 - Transient network, timeout, rate-limit, and server errors are retried a limited number of times. Authentication, permission, malformed response, and other request errors fail the property's run.
 - Pagination links are followed only over HTTPS on `supply-xml.booking.com`; repeated links are treated as an error.
-- Each scheduled run re-reads pages from the chosen start date. This favors catching edited and late-visible reviews over minimizing requests. If volume grows, add the API's documented cursor polling after validating it against the live account.
+- The collector stores the API's empty-page cursor per property and start date. Booking.com documents polling that cursor to receive the latest modified reviews. A changed start date triggers a backfill; failed runs do not advance the saved cursor.
 - Fields and category scores are optional. Missing values stay empty. Reviewer names and other unnecessary reviewer metadata are not retained.
 - No credentials, production property IDs, or real review data are included in this repository. Live collection has not been run because Azzuro has not supplied authorized API access.
 

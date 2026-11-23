@@ -43,12 +43,15 @@ def main(argv: list[str] | None = None) -> int:
             property_id = config.properties[property_key]
             run_id = store.start_run(property_key, property_id)
             counts = {"seen": 0, "added": 0, "updated": 0, "unchanged": 0}
+            poll_url = store.get_poll_url(property_id, args.from_date)
             try:
-                for source_review in client.reviews(property_id, args.from_date):
+                for source_review in client.reviews(property_id, args.from_date, poll_url):
                     counts["seen"] += 1
                     result = store.save_review(property_key, property_id, source_review)
                     counts[result] += 1
                 store.commit()
+                if client.last_poll_url:
+                    store.save_poll_url(property_id, args.from_date, client.last_poll_url)
                 store.finish_run(run_id, "success", counts)
                 print(
                     f"{PROPERTY_NAMES[property_key]}: success; {counts['seen']} seen, "

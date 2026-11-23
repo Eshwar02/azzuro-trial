@@ -32,6 +32,7 @@ class BookingClient:
         self._client_id = client_id
         self._client_secret = client_secret
         self._token: str | None = None
+        self.last_poll_url: str | None = None
 
     def _request_json(self, url: str, *, method: str = "GET", body: dict | None = None,
                       authenticated: bool = False, refresh_on_unauthorized: bool = False) -> dict:
@@ -94,8 +95,9 @@ class BookingClient:
             self._token = token
         return self._token
 
-    def reviews(self, hotel_id: str, from_date: str) -> Iterator[dict]:
-        url = f"{REVIEWS_ROOT}/{hotel_id}/reviews?from_date={from_date}"
+    def reviews(self, hotel_id: str, from_date: str, poll_url: str | None = None) -> Iterator[dict]:
+        self.last_poll_url = None
+        url = poll_url or f"{REVIEWS_ROOT}/{hotel_id}/reviews?from_date={from_date}"
         visited: set[str] = set()
         while url:
             parsed = urlparse(url)
@@ -116,6 +118,7 @@ class BookingClient:
                 raise BookingAPIError("Booking.com returned an invalid review response")
             page_reviews = data["reviews"]
             if not page_reviews:
+                self.last_poll_url = url
                 return
             for review in page_reviews:
                 if isinstance(review, dict):
@@ -128,6 +131,7 @@ class BookingClient:
                 raise BookingAPIError("Booking.com returned invalid pagination metadata")
             next_page = meta.get("next_page")
             if not next_page:
+                self.last_poll_url = url
                 return
             if not isinstance(next_page, str):
                 raise BookingAPIError("Booking.com returned an invalid pagination link")

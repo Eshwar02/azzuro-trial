@@ -48,7 +48,8 @@ def dashboard_payload() -> dict:
         rows = connection.execute(
             "SELECT property_key, property_id, review_id, review_date, created_timestamp, "
             "last_change_timestamp, language_code, headline, positive_text, negative_text, "
-            "rating, sub_scores_json, collected_at FROM reviews ORDER BY review_date DESC, collected_at DESC"
+            "rating, sub_scores_json, collected_at FROM reviews "
+            "ORDER BY review_date DESC, collected_at DESC"
         ).fetchall()
         reviews = []
         for row in rows:

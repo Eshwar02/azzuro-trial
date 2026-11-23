@@ -7,11 +7,12 @@ import math
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 REVIEW_FIELDS = (
     "created_timestamp", "last_change_timestamp", "review_date", "language_code",
-    "headline", "positive_text", "negative_text", "rating", "sub_scores_json",
+    "headline", "positive_text", "negative_text", "rating", "sub_scores_json", "source_url",
 )
 
 
@@ -46,6 +47,7 @@ class ReviewStore:
                 negative_text TEXT,
                 rating REAL,
                 sub_scores_json TEXT NOT NULL DEFAULT '{}',
+                source_url TEXT,
                 collected_at TEXT NOT NULL,
                 PRIMARY KEY (property_id, review_id)
             );
@@ -67,8 +69,20 @@ class ReviewStore:
                 unchanged INTEGER NOT NULL DEFAULT 0,
                 error_code TEXT
             );
+
+            CREATE TABLE IF NOT EXISTS sync_state (
+                property_id TEXT PRIMARY KEY,
+                from_date TEXT NOT NULL,
+                poll_url TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
             """
         )
+        review_columns = {
+            row["name"] for row in self.connection.execute("PRAGMA table_info(reviews)")
+        }
+        if "source_url" not in review_columns:
+            self.connection.execute("ALTER TABLE reviews ADD COLUMN source_url TEXT")
         self.connection.commit()
 
     def start_run(self, property_key: str, property_id: str) -> int:
@@ -102,6 +116,7 @@ class ReviewStore:
             "negative_text": self._string(content.get("negative")),
             "rating": self._number(scoring.get("review_score")),
             "sub_scores_json": json.dumps(scores, ensure_ascii=False, sort_keys=True),
+            "source_url": self._safe_source_url(source.get("url")),
         }
         existing = self.connection.execute(
             "SELECT " + ", ".join(REVIEW_FIELDS) +
@@ -127,6 +142,22 @@ class ReviewStore:
         )
         return "updated"
 
+    def get_poll_url(self, property_id: str, from_date: str) -> str | None:
+        row = self.connection.execute(
+            "SELECT poll_url FROM sync_state WHERE property_id = ? AND from_date = ?",
+            (property_id, from_date),
+        ).fetchone()
+        return row["poll_url"] if row else None
+
+    def save_poll_url(self, property_id: str, from_date: str, poll_url: str) -> None:
+        self.connection.execute(
+            "INSERT INTO sync_state (property_id, from_date, poll_url, updated_at) "
+            "VALUES (?, ?, ?, ?) ON CONFLICT(property_id) DO UPDATE SET "
+            "from_date = excluded.from_date, poll_url = excluded.poll_url, updated_at = excluded.updated_at",
+            (property_id, from_date, poll_url, utc_now()),
+        )
+        self.connection.commit()
+
     def finish_run(self, run_id: int, outcome: str, counts: dict[str, int], error_code: str | None = None) -> None:
         self.connection.execute(
             "UPDATE collection_runs SET finished_at = ?, outcome = ?, reviews_seen = ?, "
@@ -151,3 +182,12 @@ class ReviewStore:
         if not math.isfinite(result):
             raise ValueError("Review score is not finite")
         return result
+
+    @staticmethod
+    def _safe_source_url(value: object) -> str | None:
+        if not isinstance(value, str):
+            return None
+        parsed = urlparse(value)
+        if parsed.scheme == "https" and parsed.hostname == "supply-xml.booking.com":
+            return value
+        return None
