@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import sqlite3
 import sys
 from datetime import date
 
@@ -35,13 +36,22 @@ def main(argv: list[str] | None = None) -> int:
         print(str(exc), file=sys.stderr)
         return 2
 
-    store = ReviewStore(config.database_path)
+    try:
+        store = ReviewStore(config.database_path)
+    except sqlite3.Error:
+        print("Could not open the review database.", file=sys.stderr)
+        return 2
     client = BookingClient(config.client_id, config.client_secret)
     failures = 0
     try:
         for property_key in PROPERTY_NAMES:
             property_id = config.properties[property_key]
-            run_id = store.start_run(property_key, property_id)
+            try:
+                run_id = store.start_run(property_key, property_id)
+            except sqlite3.Error:
+                failures += 1
+                print(f"{PROPERTY_NAMES[property_key]}: could not start a collection run", file=sys.stderr)
+                continue
             counts = {"seen": 0, "added": 0, "updated": 0, "unchanged": 0}
             poll_url = store.get_poll_url(property_id, args.from_date)
             try:
@@ -58,12 +68,26 @@ def main(argv: list[str] | None = None) -> int:
                     f"{counts['added']} added, {counts['updated']} updated, "
                     f"{counts['unchanged']} unchanged"
                 )
-            except (BookingAPIError, ValueError) as exc:
-                store.commit()
-                code = str(exc.status_code) if isinstance(exc, BookingAPIError) and exc.status_code else type(exc).__name__
-                store.finish_run(run_id, "failed", counts, code)
+            except (BookingAPIError, ValueError, sqlite3.Error) as exc:
+                try:
+                    store.commit()
+                except sqlite3.Error:
+                    pass
+                code = (
+                    str(exc.status_code)
+                    if isinstance(exc, BookingAPIError) and exc.status_code
+                    else type(exc).__name__
+                )
+                try:
+                    store.finish_run(run_id, "failed", counts, code)
+                except sqlite3.Error:
+                    print(
+                        f"{PROPERTY_NAMES[property_key]}: unable to record the failed run",
+                        file=sys.stderr,
+                    )
                 failures += 1
-                print(f"{PROPERTY_NAMES[property_key]}: failed ({code}): {exc}", file=sys.stderr)
+                detail = "" if isinstance(exc, sqlite3.Error) else f": {exc}"
+                print(f"{PROPERTY_NAMES[property_key]}: failed ({code}){detail}", file=sys.stderr)
     finally:
         store.close()
     return 1 if failures else 0

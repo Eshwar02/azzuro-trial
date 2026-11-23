@@ -101,11 +101,16 @@ class ReviewStore:
         content = source.get("content") if isinstance(source.get("content"), dict) else {}
         scoring = source.get("scoring") if isinstance(source.get("scoring"), dict) else {}
         created = self._timestamp(source.get("created_timestamp"), "created_timestamp", required=True)
-        scores = {
-            key: value for key, value in scoring.items()
-            if key != "review_score" and isinstance(value, (str, int, float, type(None)))
-            and not isinstance(value, bool)
-        }
+        scores = {}
+        for key, value in scoring.items():
+            if key == "review_score" or value is None:
+                continue
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                continue
+            try:
+                scores[key] = self._number(value)
+            except ValueError:
+                continue
         review = {
             "created_timestamp": created,
             "last_change_timestamp": self._timestamp(source.get("last_change_timestamp"), "last_change_timestamp"),

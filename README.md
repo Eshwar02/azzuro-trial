@@ -35,7 +35,7 @@ By default, records go to `data/reviews.sqlite3`. Set `AZZURO_DB_PATH` in `.env`
 
 ## Stored data
 
-The `reviews` table stores property identifiers, review IDs, source timestamps, date, language, headline, positive and negative text, overall score, available category scores, a validated Booking.com source URL when supplied, and collection time. Reviewer details, replies, and reservation IDs are discarded during ingestion. Some reviews contain a score but no text; those records remain available for rating summaries and are labelled as having no written comment.
+The `reviews` table stores property identifiers, review IDs, source timestamps, date, language, headline, positive and negative text, overall score, available category scores, a validated Booking.com source URL when supplied, and collection time. Overall and category scores must be finite values on Booking.com's 1–10 scale; malformed category score fields are ignored. Reviewer details, replies, and reservation IDs are discarded during ingestion. Some reviews contain a score but no text; those records remain available for rating summaries and are labelled as having no written comment.
 
 The `collection_runs` table records each property's run status, counts, start and finish times, and a non-sensitive error code. A failed API call is recorded as a failure, not as a successful empty result. Some records may have been saved before a later page failed; the run record makes that partial outcome visible, and a later sync safely revisits the same reviews.
 
@@ -60,7 +60,7 @@ The source timestamp is retained as returned. The API documentation's example do
 ## Reliability and known limits
 
 - The collector uses Booking.com's documented token exchange endpoint. Tokens expire after one hour; an expired token gets one refresh and retry.
-- Transient network, timeout, rate-limit, and server errors are retried a limited number of times. Authentication, permission, malformed response, and other request errors fail the property's run.
+- Transient network, timeout, rate-limit, and server errors are retried a limited number of times. Authentication, permission, malformed response, and database write errors fail the property's run when the database can still record the status.
 - Pagination links are followed only over HTTPS on `supply-xml.booking.com`; repeated links are treated as an error.
 - The collector stores the API's empty-page cursor per property and start date. Booking.com documents polling that cursor to receive the latest modified reviews. A changed start date triggers a backfill; failed runs do not advance the saved cursor.
 - Fields and category scores are optional. Missing values stay empty. Reviewer names and other unnecessary reviewer metadata are not retained.
