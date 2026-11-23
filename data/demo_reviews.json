@@ -1,0 +1,138 @@
+{
+  "dataset_type": "synthetic_demo_not_collected",
+  "notice": "Every review below is fictional. Do not present these records as Booking.com guest feedback.",
+  "reviews": [
+    {
+      "property_key": "olympic-paddington",
+      "property_name": "Olympic Hotel Paddington",
+      "property_id": "DEMO-OLYMPIC",
+      "review_id": "demo-olympic-001",
+      "review_date": "2026-11-23",
+      "rating": 8.4,
+      "positive_text": "Staff were friendly and the station was an easy walk away.",
+      "negative_text": "",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "potts-point",
+      "property_name": "Potts Point",
+      "property_id": "DEMO-POTTS",
+      "review_id": "demo-potts-001",
+      "review_date": "2026-11-23",
+      "rating": 5.8,
+      "positive_text": "",
+      "negative_text": "The room was noisy late at night.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "central-sydney",
+      "property_name": "Central Sydney",
+      "property_id": "DEMO-CENTRAL",
+      "review_id": "demo-central-001",
+      "review_date": "2026-11-23",
+      "rating": 9.2,
+      "positive_text": "The room was clean and felt freshly renovated.",
+      "negative_text": "",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "darling-harbour",
+      "property_name": "Darling Harbour",
+      "property_id": "DEMO-DARLING",
+      "review_id": "demo-darling-001",
+      "review_date": "2026-11-23",
+      "rating": 4.5,
+      "positive_text": "",
+      "negative_text": "Waited a while to check in, and the bathroom was dirty.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "olympic-paddington",
+      "property_name": "Olympic Hotel Paddington",
+      "property_id": "DEMO-OLYMPIC",
+      "review_id": "demo-olympic-002",
+      "review_date": "2026-11-22",
+      "rating": 6.2,
+      "positive_text": "",
+      "negative_text": "Had to wait for the keys at check-in. The room felt small.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "olympic-paddington",
+      "property_name": "Olympic Hotel Paddington",
+      "property_id": "DEMO-OLYMPIC",
+      "review_id": "demo-olympic-003",
+      "review_date": "2026-11-21",
+      "rating": 9.0,
+      "positive_text": "Good location, close to transport and cafes.",
+      "negative_text": "",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "potts-point",
+      "property_name": "Potts Point",
+      "property_id": "DEMO-POTTS",
+      "review_id": "demo-potts-002",
+      "review_date": "2026-11-22",
+      "rating": 7.0,
+      "positive_text": "Reception were helpful when we arrived.",
+      "negative_text": "We could hear traffic through the window.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "potts-point",
+      "property_name": "Potts Point",
+      "property_id": "DEMO-POTTS",
+      "review_id": "demo-potts-003",
+      "review_date": "2026-11-20",
+      "rating": 5.5,
+      "positive_text": "",
+      "negative_text": "Bathroom was dusty and there was a stain on the sheet.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "central-sydney",
+      "property_name": "Central Sydney",
+      "property_id": "DEMO-CENTRAL",
+      "review_id": "demo-central-002",
+      "review_date": "2026-11-22",
+      "rating": 8.3,
+      "positive_text": "The wifi worked well and the location made getting around easy.",
+      "negative_text": "",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "central-sydney",
+      "property_name": "Central Sydney",
+      "property_id": "DEMO-CENTRAL",
+      "review_id": "demo-central-003",
+      "review_date": "2026-11-19",
+      "rating": 6.8,
+      "positive_text": "",
+      "negative_text": "A bit expensive for a room with dated furniture.",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "darling-harbour",
+      "property_name": "Darling Harbour",
+      "property_id": "DEMO-DARLING",
+      "review_id": "demo-darling-002",
+      "review_date": "2026-11-22",
+      "rating": 8.5,
+      "positive_text": "Staff were warm and the bed was comfortable.",
+      "negative_text": "",
+      "is_synthetic": true
+    },
+    {
+      "property_key": "darling-harbour",
+      "property_name": "Darling Harbour",
+      "property_id": "DEMO-DARLING",
+      "review_id": "demo-darling-003",
+      "review_date": "2026-11-18",
+      "rating": 5.9,
+      "positive_text": "",
+      "negative_text": "The shower was broken and the room needed attention.",
+      "is_synthetic": true
+    }
+  ]
+}

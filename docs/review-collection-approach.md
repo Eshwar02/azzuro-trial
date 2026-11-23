@@ -70,7 +70,7 @@ The repository now has a Python command-line collector in `src/azzuro_reviews/`.
 
 Run instructions and the environment variable format are in the root [README](../README.md). The collector has not been run against Booking.com because API access and hotel IDs are still unconfirmed. No live review data is included.
 
-The dashboard and insight work can continue independently against a normalized review model and explicitly synthetic fixtures. Keep the collector as one data-source adapter; replace the fixtures with API records when access is confirmed. Live source access remains important for final data accuracy and the sample-data deliverable, but it does not need to block layout, filters, trend calculations, or topic-classifier work.
+The dashboard can continue independently against the normalized review model and explicitly synthetic fixtures. Keep the collector as one data-source adapter; replace the fixtures with API records when access is confirmed. Live source access remains important for final data accuracy and the sample-data deliverable, but it does not need to block layout, filters, trend calculations, or topic-classifier work.
 
 ## Phase 2 outcome
 
