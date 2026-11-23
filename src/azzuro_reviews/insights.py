@@ -86,7 +86,19 @@ def classify_topics(review: dict) -> list[str]:
 
 def annotate_review(review: dict) -> dict:
     """Return a copy with labels; the stored source record stays unchanged."""
-    return {**review, "sentiment": classify_sentiment(review), "topics": classify_topics(review)}
+    positive = _text(review.get("positive_text"))
+    negative = _text(review.get("negative_text"))
+    score = review.get("rating")
+    conflict = (
+        bool(positive and not negative and isinstance(score, (int, float)) and not isinstance(score, bool) and score <= 5)
+        or bool(negative and not positive and isinstance(score, (int, float)) and not isinstance(score, bool) and score >= 8)
+    )
+    return {
+        **review,
+        "sentiment": classify_sentiment(review),
+        "sentiment_conflict": conflict,
+        "topics": classify_topics(review),
+    }
 
 
 def topic_summary(reviews: list[dict], *, sentiment: str = "negative") -> list[dict]:

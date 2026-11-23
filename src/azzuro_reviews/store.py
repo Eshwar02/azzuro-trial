@@ -100,7 +100,7 @@ class ReviewStore:
             raise ValueError("Review is missing a valid review_id")
         content = source.get("content") if isinstance(source.get("content"), dict) else {}
         scoring = source.get("scoring") if isinstance(source.get("scoring"), dict) else {}
-        created = self._string(source.get("created_timestamp"))
+        created = self._timestamp(source.get("created_timestamp"), "created_timestamp", required=True)
         scores = {
             key: value for key, value in scoring.items()
             if key != "review_score" and isinstance(value, (str, int, float, type(None)))
@@ -108,7 +108,7 @@ class ReviewStore:
         }
         review = {
             "created_timestamp": created,
-            "last_change_timestamp": self._string(source.get("last_change_timestamp")),
+            "last_change_timestamp": self._timestamp(source.get("last_change_timestamp"), "last_change_timestamp"),
             "review_date": created[:10] if created else None,
             "language_code": self._string(content.get("language_code")),
             "headline": self._string(content.get("headline")),
@@ -181,7 +181,22 @@ class ReviewStore:
         result = float(value)
         if not math.isfinite(result):
             raise ValueError("Review score is not finite")
+        if not 1 <= result <= 10:
+            raise ValueError("Review score is outside Booking.com's 1 to 10 scale")
         return result
+
+    @staticmethod
+    def _timestamp(value: object, field: str, *, required: bool = False) -> str | None:
+        if value is None and not required:
+            return None
+        if not isinstance(value, str) or not value:
+            raise ValueError(f"Review is missing a valid {field}")
+        normalized = value[:-1] + "+00:00" if value.endswith("Z") else value
+        try:
+            datetime.fromisoformat(normalized)
+        except ValueError as exc:
+            raise ValueError(f"Review has an invalid {field}") from exc
+        return value
 
     @staticmethod
     def _safe_source_url(value: object) -> str | None:

@@ -41,9 +41,9 @@ The `collection_runs` table records each property's run status, counts, start an
 
 ## Insights and demo data
 
-`src/azzuro_reviews/insights.py` provides explainable sentiment/topic labels, topic percentages, Sydney-local week-to-date rating comparison, and property rating summaries. When both positive and negative text are present, sentiment is mixed. Otherwise the text decides; a score of 8 or more is positive, 5 or less negative, and scores between them mixed when no text is available. Topic labels use English keyword patterns and can overlap. A topic percentage divides reviews with that topic by all reviews in the selected sentiment group.
+`src/azzuro_reviews/insights.py` adds explainable sentiment and topic labels. The dashboard calculates its summaries from the currently selected date and property filters. When both positive and negative text are present, sentiment is mixed. Otherwise the text decides; a score of 8 or more is positive, 5 or less negative, and scores between them mixed when no text is available. Topic labels use English keyword patterns and can overlap. A topic percentage divides reviews with that topic by all reviews in the selected sentiment group. A strong disagreement between text and rating is flagged for a human check.
 
-`data/demo_reviews.json` contains fictional sample records to support dashboard development. The file is marked `synthetic_demo_not_collected`; these are not Booking.com reviews and must be shown as demo data in any interface. Replace them with authorized API records when access is confirmed.
+`data/demo_reviews.json` contains fictional sample records to support dashboard development. Its dates are relative to the current Sydney date so the weekly view stays populated over time. The file is marked `synthetic_demo_not_collected`; these are not Booking.com reviews and must be shown as demo data in any interface. Replace them with authorized API records when access is confirmed.
 
 ## Open the dashboard
 

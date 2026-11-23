@@ -7,10 +7,12 @@ import json
 import os
 import sqlite3
 import sys
+from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from mimetypes import guess_type
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent
 WEB_ROOT = ROOT / "web"
@@ -30,6 +32,13 @@ def dashboard_payload() -> dict:
 
     if not database_path.is_file():
         fixture = json.loads(DEMO_FILE.read_text(encoding="utf-8"))
+        today = datetime.now(ZoneInfo("Australia/Sydney")).date()
+        reviews = []
+        for source_review in fixture["reviews"]:
+            review = dict(source_review)
+            days_ago = review.pop("days_ago", 0)
+            review["review_date"] = (today - timedelta(days=days_ago)).isoformat()
+            reviews.append(annotate_review(review))
         return {
             "dataset_type": fixture["dataset_type"],
             "notice": fixture["notice"],
@@ -39,7 +48,7 @@ def dashboard_payload() -> dict:
             "last_collected_at": None,
             "last_checked_at": None,
             "collection_runs": [],
-            "reviews": [annotate_review(review) for review in fixture["reviews"]],
+            "reviews": reviews,
         }
 
     connection = sqlite3.connect(database_path.as_uri() + "?mode=ro", uri=True)
@@ -69,15 +78,26 @@ def dashboard_payload() -> dict:
     finally:
         connection.close()
 
+    run_records = [dict(run) for run in runs]
+    has_successful_sync = any(run["outcome"] == "success" for run in run_records)
+    has_review_data = bool(reviews)
+    dataset_type = "booking_api" if has_review_data or has_successful_sync else "awaiting_authorized_data"
+    if has_review_data:
+        notice = "Reviews collected through the authorized Booking.com Guest Review API."
+    elif has_successful_sync:
+        notice = "The authorized Booking.com sync completed, but returned no reviews for this date range."
+    else:
+        notice = "No successful Booking.com review sync has run. Demo records are not mixed into this database view."
+
     return {
-        "dataset_type": "booking_api",
-        "notice": "Reviews collected through the authorized Booking.com Guest Review API.",
+        "dataset_type": dataset_type,
+        "notice": notice,
         "properties": [
             {"key": key, "name": name} for key, name in PROPERTY_NAMES.items()
         ],
         "last_collected_at": max((review["collected_at"] for review in reviews if review.get("collected_at")), default=None),
         "last_checked_at": max((run["finished_at"] for run in runs if run["finished_at"]), default=None),
-        "collection_runs": [dict(run) for run in runs],
+        "collection_runs": run_records,
         "reviews": reviews,
     }
 

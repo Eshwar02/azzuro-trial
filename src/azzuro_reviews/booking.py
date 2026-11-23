@@ -100,9 +100,7 @@ class BookingClient:
         url = poll_url or f"{REVIEWS_ROOT}/{hotel_id}/reviews?from_date={from_date}"
         visited: set[str] = set()
         while url:
-            parsed = urlparse(url)
-            if parsed.scheme != "https" or parsed.hostname != ALLOWED_API_HOST or parsed.port not in (None, 443):
-                raise BookingAPIError("Booking.com returned an unexpected pagination URL")
+            self._validate_review_url(url, hotel_id)
             if url in visited:
                 raise BookingAPIError("Booking.com repeated a pagination URL")
             visited.add(url)
@@ -131,8 +129,22 @@ class BookingClient:
                 raise BookingAPIError("Booking.com returned invalid pagination metadata")
             next_page = meta.get("next_page")
             if not next_page:
-                self.last_poll_url = url
-                return
+                raise BookingAPIError("Booking.com omitted the next-page cursor before an empty page")
             if not isinstance(next_page, str):
                 raise BookingAPIError("Booking.com returned an invalid pagination link")
             url = next_page
+
+    @staticmethod
+    def _validate_review_url(url: str, hotel_id: str) -> None:
+        parsed = urlparse(url)
+        valid_paths = {
+            f"/review-api/properties/{hotel_id}/reviews",
+            f"/reviews/properties/{hotel_id}/reviews",
+        }
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != ALLOWED_API_HOST
+            or parsed.port not in (None, 443)
+            or parsed.path not in valid_paths
+        ):
+            raise BookingAPIError("Booking.com returned an unexpected review pagination URL")

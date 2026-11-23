@@ -9,7 +9,7 @@ const TOPIC_LABELS = {
   value_for_money: "Value for money",
 };
 
-const state = { payload: null, reviews: [], propertyNames: new Map() };
+const state = { payload: null, reviews: [], propertyNames: new Map(), feedLimit: 20 };
 
 function sydneyToday() {
   const parts = new Intl.DateTimeFormat("en-AU", {
@@ -162,9 +162,8 @@ function updateTrend(reviews) {
   if (from && to && from <= to) {
     const days = Math.round((new Date(`${to}T12:00:00Z`) - new Date(`${from}T12:00:00Z`)) / 86400000);
     const first = firstDayOfWeek(from);
-    for (let offset = 0; offset <= days; offset += 7) {
-      const week = shiftDate(first, offset);
-      if (week <= to) weeks.set(week, { positive: 0, negative: 0 });
+    for (let week = first; week <= to; week = shiftDate(week, 7)) {
+      weeks.set(week, { positive: 0, negative: 0 });
     }
   }
   for (const review of reviews) {
@@ -192,7 +191,12 @@ function updateTrend(reviews) {
       </div>`;
     chart.append(row);
   });
-  document.querySelector("#trend-empty").hidden = reviews.length > 0;
+  const hasSentimentData = reviews.some((review) => review.sentiment === "positive" || review.sentiment === "negative");
+  const trendEmpty = document.querySelector("#trend-empty");
+  trendEmpty.hidden = hasSentimentData;
+  trendEmpty.textContent = reviews.length
+    ? "No positive or negative reviews in this date range."
+    : "No reviews in this date range.";
 }
 
 function updateProperties(reviews, selectedProperty) {
@@ -222,7 +226,7 @@ function updateFeed(reviews) {
   const ordered = [...reviews].sort((a, b) => b.review_date.localeCompare(a.review_date));
   document.querySelector("#feed-count").textContent = `${ordered.length} ${ordered.length === 1 ? "review" : "reviews"}`;
   document.querySelector("#review-empty").hidden = ordered.length > 0;
-  ordered.slice(0, 30).forEach((review) => {
+  ordered.slice(0, state.feedLimit).forEach((review) => {
     const card = document.createElement("article");
     card.className = "review-item";
     const topicTags = (review.topics || []).map((topic) =>
@@ -232,6 +236,9 @@ function updateFeed(reviews) {
     if (review.positive_text) reviewParts.push(`<p><span class="review-part-label">Positive</span>${escapeHTML(review.positive_text)}</p>`);
     if (review.negative_text) reviewParts.push(`<p><span class="review-part-label">Could improve</span>${escapeHTML(review.negative_text)}</p>`);
     if (!reviewParts.length && review.headline) reviewParts.push(`<p>${escapeHTML(review.headline)}</p>`);
+    if (review.sentiment_conflict) {
+      reviewParts.push('<p class="review-conflict" role="note">The written comment and rating point in different directions. Check this review before drawing conclusions.</p>');
+    }
     card.innerHTML = `
       <div class="review-meta">
         <div><strong>${escapeHTML(review.property_name || "Property")}</strong><span class="review-date">${escapeHTML(formatDate(review.review_date))}</span></div>
@@ -242,12 +249,9 @@ function updateFeed(reviews) {
       <div class="review-tags">${topicTags || "<span class=\"topic-tag topic-tag-muted\">No topic match</span>"}</div>`;
     feed.append(card);
   });
-  if (ordered.length > 30) {
-    const note = document.createElement("p");
-    note.className = "feed-limit-note";
-    note.textContent = `Showing 30 of ${ordered.length} reviews. Narrow the date range to find a specific review.`;
-    feed.append(note);
-  }
+  const loadMore = document.querySelector("#load-more");
+  loadMore.hidden = ordered.length <= state.feedLimit;
+  loadMore.textContent = `Show more reviews (${ordered.length - state.feedLimit} remaining)`;
 }
 
 function updateFreshness(payload) {
@@ -261,6 +265,11 @@ function updateFreshness(payload) {
     return;
   }
   notice.hidden = true;
+  if (payload.dataset_type === "awaiting_authorized_data") {
+    notice.hidden = false;
+    notice.className = "data-notice error-notice";
+    notice.textContent = payload.notice || "No successful review sync has run. Demo data is not mixed into this view.";
+  }
   const latestByProperty = new Map();
   for (const run of payload.collection_runs || []) {
     if (!latestByProperty.has(run.property_key)) latestByProperty.set(run.property_key, run);
@@ -271,9 +280,18 @@ function updateFreshness(payload) {
     notice.className = "data-notice error-notice";
     notice.textContent = `${failedRuns} recent property sync${failedRuns === 1 ? "" : "s"} failed. Existing reviews are still shown.`;
   }
-  freshness.textContent = payload.last_checked_at
-    ? `Last checked ${formatTimestamp(payload.last_checked_at)}`
-    : "No reviews collected yet";
+  if (payload.last_checked_at) {
+    const checked = new Date(payload.last_checked_at);
+    const ageDays = (Date.now() - checked.getTime()) / 86400000;
+    freshness.textContent = `Last checked ${formatTimestamp(payload.last_checked_at)}`;
+    if (ageDays > 7 && !failedRuns) {
+      notice.hidden = false;
+      notice.className = "data-notice demo-notice";
+      notice.textContent = "Data is more than 7 days old. Check the latest collection run.";
+    }
+  } else {
+    freshness.textContent = "No reviews collected yet";
+  }
 }
 
 function formatTimestamp(value) {
@@ -316,12 +334,21 @@ function setUpFilters(reviews) {
   });
   defaultWeek();
   [select, document.querySelector("#date-from"), document.querySelector("#date-to")]
-    .forEach((control) => control.addEventListener("change", render));
+    .forEach((control) => control.addEventListener("change", () => {
+      state.feedLimit = 20;
+      render();
+    }));
+  document.querySelector("#load-more").addEventListener("click", () => {
+    state.feedLimit += 20;
+    updateFeed(selectedReviews());
+  });
   document.querySelector("#this-week").addEventListener("click", () => {
+    state.feedLimit = 20;
     defaultWeek();
     render();
   });
   document.querySelector("#clear-filters").addEventListener("click", () => {
+    state.feedLimit = 20;
     select.value = "all";
     defaultWeek();
     render();
