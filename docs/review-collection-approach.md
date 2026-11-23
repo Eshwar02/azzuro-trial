@@ -43,6 +43,20 @@ First check whether Azzurro's existing PMS or connectivity provider can supply t
 
 If no authorized recurring source is available, do not automate access to Booking.com pages or claim that a partial scrape is reliable. For development, use clearly identified synthetic fixtures or a small dataset supplied by Azzurro through an authorized channel. Label fixture data so it cannot be mistaken for collected reviews. A production collector and real sample data remain blocked until an approved source is available.
 
+## Other sources considered
+
+| Source | What it can provide | Fit for this dashboard |
+| --- | --- | --- |
+| Booking.com public listing pages | Reviews visible to a normal visitor, subject to page behavior and platform terms. | Not an automated source: Booking.com's terms require prior written permission for automated access. The pages also returned a robot check in our inspection. |
+| Booking.com Guest Review API | Structured Booking.com reviews and property scores, with IDs and pagination. | Best fit. Requires an authorized Connectivity machine account and Guest Reviews access for each property. |
+| Booking.com reviews iframe | A property view of reviews and replies embedded in a PMS or other interface; iframe URL is short-lived. | Useful as an operational fallback for viewing reviews, but not a structured feed for our own topic counts, weekly trends, and filters. |
+| Azzuro's PMS, channel manager, or review-management provider | May already receive Booking.com reviews through an approved connection and may offer an export or API. | Worth checking first with the account owner. Use only if the provider confirms Booking.com coverage, internal-use permission, history, update cadence, and access to review text and IDs. No Azzuro provider or export has been confirmed. |
+| Extranet manual export | Booking.com documents viewing reviews in the Extranet. | I found no official documentation confirming a review CSV export. An owner-supplied export is a possible development source only if the account or provider can produce one and confirms its use is allowed. Do not automate the Extranet interface. |
+| Google Business Profile Reviews API | Reviews for verified Google Business Profile locations. | Separate review source, not Booking.com data. Could be a future additional channel, but it cannot fill the Booking.com requirement. API access also requires Google approval and an authorized account. |
+| Synthetic fixtures | Handwritten examples in the same shape as normalized review records. | Good for building and demonstrating the dashboard while credentials are pending. Must be clearly labeled as synthetic and never presented as collected guest feedback. |
+
+The Booking.com documentation supports the API, connection, and iframe distinctions above. Google documents its API as access to reviews associated with Google Business Profile locations, with project approval required. See [Booking.com's iframe documentation](https://developers.booking.com/connectivity/docs/review-api/access-reviews-iframe), [the Booking.com connection overview](https://developers.booking.com/connectivity/docs), and [Google's review data guide](https://developers.google.com/my-business/content/review-data) and [API access prerequisites](https://developers.google.com/my-business/content/prereqs).
+
 ## Findings from this check
 
 - Direct inspection of all four supplied listing URLs returned a JavaScript-disabled robot-verification page in the research browser. This describes this inspection environment; it does not establish whether a normal visitor can view the pages.
@@ -55,6 +69,8 @@ If no authorized recurring source is available, do not automate access to Bookin
 The repository now has a Python command-line collector in `src/azzuro_reviews/`. It exchanges the machine account credentials for a JWT, caches the token while syncing properties, retries transient failures, follows API pagination links on Booking.com's API host, and upserts reviews and run status into SQLite. It discards reviewer metadata and reservation IDs. Each run re-reads pages from its configured start date; this is deliberately simple and idempotent, though it will make more requests as history grows.
 
 Run instructions and the environment variable format are in the root [README](../README.md). The collector has not been run against Booking.com because API access and hotel IDs are still unconfirmed. No live review data is included.
+
+The dashboard and insight work can continue independently against a normalized review model and explicitly synthetic fixtures. Keep the collector as one data-source adapter; replace the fixtures with API records when access is confirmed. Live source access remains important for final data accuracy and the sample-data deliverable, but it does not need to block layout, filters, trend calculations, or topic-classifier work.
 
 ## Phase 2 outcome
 
