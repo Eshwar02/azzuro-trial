@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Guest feedback | Azzuro Hotels</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Azzuro Hotels operations home">
+      <span class="brand-mark" aria-hidden="true">A</span>
+      <span class="brand-name">azzuro<span> / operations</span></span>
+    </a>
+    <div class="topbar-right">
+      <span class="workspace-label">Sydney properties</span>
+      <span class="avatar" aria-hidden="true">AO</span>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <div id="data-notice" class="data-notice" role="status" hidden></div>
+
+    <section class="page-heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">OPERATIONS OVERVIEW</p>
+        <h1 id="page-title">Guest feedback</h1>
+        <p class="page-description">Ratings and recurring themes across your properties.</p>
+      </div>
+      <div class="freshness">
+        <span class="freshness-dot" aria-hidden="true"></span>
+        <span id="freshness-text">Loading review data…</span>
+      </div>
+    </section>
+
+    <section class="filter-panel" aria-label="Review filters">
+      <div class="filter-field property-field">
+        <label for="property-filter">Property</label>
+        <select id="property-filter">
+          <option value="all">All properties</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="date-from">From</label>
+        <input id="date-from" type="date">
+      </div>
+      <div class="filter-field">
+        <label for="date-to">To</label>
+        <input id="date-to" type="date">
+      </div>
+      <button id="this-week" class="button button-secondary" type="button">This week</button>
+      <button id="clear-filters" class="button button-quiet" type="button">Reset</button>
+    </section>
+
+    <section class="metrics-grid" aria-label="Review summary">
+      <article class="metric-card metric-primary">
+        <div class="metric-label">Average rating</div>
+        <div class="metric-main"><strong id="average-rating">—</strong><span class="rating-scale">/ 10</span></div>
+        <div id="rating-change" class="metric-foot">Compared with previous period</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Reviews in range</div>
+        <div id="review-count" class="metric-main"><strong>—</strong></div>
+        <div id="range-label" class="metric-foot">Selected dates</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Negative reviews</div>
+        <div class="metric-main"><strong id="negative-count">—</strong><span id="negative-share" class="metric-inline"></span></div>
+        <div class="metric-foot">Based on text and rating</div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Most mentioned issue</div>
+        <div id="top-topic" class="metric-main topic-metric"><strong>—</strong></div>
+        <div id="top-topic-detail" class="metric-foot">Across negative reviews</div>
+      </article>
+    </section>
+
+    <section class="insights-grid" aria-label="Review insights">
+      <article class="panel topic-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">WHAT GUESTS MENTION</p>
+            <h2>Common topics</h2>
+          </div>
+          <span class="heading-note">Negative reviews</span>
+        </div>
+        <p class="panel-help">Share of negative reviews that mention each topic. A review can mention more than one.</p>
+        <div id="topic-list" class="topic-list"></div>
+      </article>
+
+      <article class="panel trend-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">SENTIMENT OVER TIME</p>
+            <h2>Positive and negative reviews</h2>
+          </div>
+          <span class="heading-note">Selected date range</span>
+        </div>
+        <div class="chart-legend" aria-label="Chart legend">
+          <span><i class="legend-dot positive-dot"></i>Positive</span>
+          <span><i class="legend-dot negative-dot"></i>Negative</span>
+        </div>
+        <div id="sentiment-chart" class="sentiment-chart" role="img" aria-label="Positive and negative review counts by week"></div>
+        <p id="trend-empty" class="empty-note" hidden>No reviews in this date range.</p>
+      </article>
+    </section>
+
+    <section class="panel property-panel" aria-labelledby="property-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">PROPERTY COMPARISON</p>
+          <h2 id="property-heading">Ratings by property</h2>
+        </div>
+        <span class="heading-note">Selected date range</span>
+      </div>
+      <div id="property-list" class="property-list"></div>
+    </section>
+
+    <section class="panel review-panel" aria-labelledby="reviews-heading">
+      <div class="panel-heading review-heading">
+        <div>
+          <p class="eyebrow">READ THE DETAIL</p>
+          <h2 id="reviews-heading">Recent reviews</h2>
+        </div>
+        <span id="feed-count" class="heading-note" role="status" aria-live="polite"></span>
+      </div>
+      <div id="review-list" class="review-list"></div>
+      <p id="review-empty" class="empty-note" hidden>No reviews match these filters.</p>
+    </section>
+
+    <footer class="page-footer">
+      <span>Azzuro Hotels · Guest feedback</span>
+      <span>Ratings reflect available guest reviews, not a full service audit.</span>
+    </footer>
+  </main>
+</body>
+</html>

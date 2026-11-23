@@ -45,6 +45,16 @@ The `collection_runs` table records each property's run status, counts, start an
 
 `data/demo_reviews.json` contains fictional sample records to support dashboard development. The file is marked `synthetic_demo_not_collected`; these are not Booking.com reviews and must be shown as demo data in any interface. Replace them with authorized API records when access is confirmed.
 
+## Open the dashboard
+
+From the repository root, run:
+
+```sh
+python3 server.py
+```
+
+Then open `http://127.0.0.1:8000`. The server binds to the local machine by default. It reads from the configured SQLite database when one exists; until then, it uses the clearly marked synthetic demo file. It serves only the dashboard assets and the normalized dashboard response, not repository files or `.env`.
+
 The source timestamp is retained as returned. The API documentation's example does not specify a timezone for its timestamp string, so `review_date` currently uses its date portion. Confirm timestamp semantics before using hour-level reporting or converting dates across timezones.
 
 ## Reliability and known limits
