@@ -73,7 +73,7 @@ The first classifier should favor rules that can be explained and checked. Keep 
 
 ## Collection and data quality
 
-The collector should use public information only and must not depend on a staff member's login, personal cookies, or credentials. Phase 2 will check current access conditions and choose a collection method that fits them.
+The collector must use an authorized source and must not depend on a staff member's login, personal cookies, or credentials. Phase 2 selected Booking.com's internal Guest Review API, subject to Azzurro confirming property access, a permitted connection, and machine-account permissions. Scraping the public pages is out of scope without Booking.com's prior express written permission. See [the collection approach](docs/review-collection-approach.md) for the access check and fallback plan.
 
 Each run should report its start and finish time and a result for each property. Distinguish a successful check with no new reviews from a failed or partial check. Temporary failures should be retryable and must not remove previously collected records. Track reviews added, updated, skipped as duplicates, and any errors.
 
